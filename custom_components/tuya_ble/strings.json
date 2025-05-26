@@ -32,6 +32,9 @@
     "button": {
       "push": {
         "name": "Push"
+      },
+      "manual_lock": {
+        "name": "Manual Lock"
       }
     },
     "number": {
@@ -172,7 +175,7 @@
     },
     "switch": {
       "programming_mode": {
-        "name": "Programming Mode" 
+        "name": "Programming Mode"
       },
       "programming_switch": {
         "name": "Programming Switch"
@@ -206,7 +209,7 @@
       },
       "program_repeat_forever": {
         "name": "Repeat forever"
-      },      
+      },
       "reverse_positions": {
         "name": "Reverse positions"
       },
@@ -215,7 +218,7 @@
       },
       "lock_motor_state": {
           "name": "Motor State"
-      },            
+      },
       "water_valve": {
           "name": "Irrigation valve"
       },
@@ -224,7 +227,7 @@
       },
       "water_valve_z2": {
           "name": "Irrigation valve - Zone 2"
-      }	  
+      }
     },
     "text": {
       "program": {

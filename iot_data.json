@@ -1,0 +1,227 @@
+[
+      {
+        "code": "unlock_method_create",
+        "custom_name": "",
+        "dp_id": 1,
+        "time": 1747572444804,
+        "type": "raw",
+        "value": "Af8BAQAAAA=="
+      },
+      {
+        "code": "unlock_method_delete",
+        "custom_name": "",
+        "dp_id": 2,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "unlock_method_modify",
+        "custom_name": "",
+        "dp_id": 3,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "bluetooth_unlock",
+        "custom_name": "",
+        "dp_id": 6,
+        "time": 1747915289308,
+        "type": "raw",
+        "value": "AQE="
+      },
+      {
+        "code": "residual_electricity",
+        "custom_name": "",
+        "dp_id": 8,
+        "time": 1747916563507,
+        "type": "value",
+        "value": 100
+      },
+      {
+        "code": "unlock_fingerprint",
+        "custom_name": "",
+        "dp_id": 12,
+        "time": 1747915267000,
+        "type": "value",
+        "value": 100
+      },
+      {
+        "code": "unlock_password",
+        "custom_name": "",
+        "dp_id": 13,
+        "time": 1747572595000,
+        "type": "value",
+        "value": 255
+      },
+      {
+        "code": "unlock_dynamic",
+        "custom_name": "",
+        "dp_id": 14,
+        "time": 1747572262444,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "unlock_ble",
+        "custom_name": "",
+        "dp_id": 19,
+        "time": 1747915285000,
+        "type": "value",
+        "value": 1
+      },
+      {
+        "code": "alarm_lock",
+        "custom_name": "",
+        "dp_id": 21,
+        "time": 1747572262444,
+        "type": "enum",
+        "value": "wrong_finger"
+      },
+      {
+        "code": "language",
+        "custom_name": "",
+        "dp_id": 28,
+        "time": 1747916564046,
+        "type": "enum",
+        "value": "german"
+      },
+      {
+        "code": "beep_volume",
+        "custom_name": "",
+        "dp_id": 31,
+        "time": 1747916563847,
+        "type": "enum",
+        "value": "high"
+      },
+      {
+        "code": "reverse_lock",
+        "custom_name": "",
+        "dp_id": 32,
+        "time": 1747916564447,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "manual_lock",
+        "custom_name": "",
+        "dp_id": 46,
+        "time": 1747916089287,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "lock_motor_state",
+        "custom_name": "",
+        "dp_id": 47,
+        "time": 1747916083451,
+        "type": "bool",
+        "value": false
+      },
+      {
+        "code": "temporary_password_creat",
+        "custom_name": "",
+        "dp_id": 51,
+        "time": 1747572525622,
+        "type": "raw",
+        "value": "lgA="
+      },
+      {
+        "code": "temporary_password_delete",
+        "custom_name": "",
+        "dp_id": 52,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "temporary_password_modify",
+        "custom_name": "",
+        "dp_id": 53,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "synch_method",
+        "custom_name": "",
+        "dp_id": 54,
+        "time": 1747838822775,
+        "type": "raw",
+        "value": "AQE="
+      },
+      {
+        "code": "unlock_temporary",
+        "custom_name": "",
+        "dp_id": 55,
+        "time": 1747572528000,
+        "type": "value",
+        "value": 150
+      },
+      {
+        "code": "remote_no_pd_setkey",
+        "custom_name": "",
+        "dp_id": 60,
+        "time": 1747915310019,
+        "type": "raw",
+        "value": "AAAB"
+      },
+      {
+        "code": "remote_no_dp_key",
+        "custom_name": "",
+        "dp_id": 61,
+        "time": 1747768134790,
+        "type": "raw",
+        "value": "AAAB"
+      },
+      {
+        "code": "unlock_phone_remote",
+        "custom_name": "",
+        "dp_id": 62,
+        "time": 1747768129000,
+        "type": "value",
+        "value": 1
+      },
+      {
+        "code": "unlock_voice_remote",
+        "custom_name": "",
+        "dp_id": 63,
+        "time": 1747572262444,
+        "type": "value",
+        "value": 0
+      },
+      {
+        "code": "password_offline_time",
+        "custom_name": "",
+        "dp_id": 64,
+        "time": 1747838806926,
+        "type": "string",
+        "value": "1747838800"
+      },
+      {
+        "code": "unlock_offline_clear_single",
+        "custom_name": "",
+        "dp_id": 65,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "unlock_offline_clear",
+        "custom_name": "",
+        "dp_id": 66,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "unlock_offline_pd",
+        "custom_name": "",
+        "dp_id": 67,
+        "time": 1747838800316,
+        "type": "raw"
+      },
+      {
+        "code": "special_function",
+        "custom_name": "",
+        "dp_id": 68,
+        "time": 1747916564647,
+        "type": "enum",
+        "value": "function1"
+      }
+    ]

@@ -37,6 +37,12 @@
         "button": {
             "push": {
                 "name": "Push"
+            },
+            "manual_lock": {
+                "name": "Manual Lock"
+            },
+            "bluetooth_unlock": {
+                "name": "Unlock"
             }
         },
         "number": {
@@ -79,7 +85,13 @@
         },
         "select": {
             "beep_volume": {
-                "name": "Lock Volume"
+                "name": "Lock Volume",
+                "state": {
+                    "mute": "Mute",
+                    "low": "Low",
+                    "medium": "Medium",
+                    "high": "High"
+                }
             },
             "fingerbot_mode": {
                 "name": "Mode",
@@ -98,11 +110,36 @@
             },
             "temperature_unit": {
                 "name": "Temperature unit"
+            },
+            "language": {
+                "name": "Language",
+                "state": {
+                    "chinese_simplified": "Chinese (Simplified)",
+                    "english": "English",
+                    "japanese": "Japanese",
+                    "german": "German",
+                    "spanish": "Spanish",
+                    "french": "French",
+                    "russian": "Russian",
+                    "korean": "Korean"
+                }
+            },
+            "special_function": {
+                "name": "Anti-lock",
+                "state": {
+                    "function1": "Off",
+                    "function2": "On"
+                }
             }
         },
         "sensor": {
             "alarm_lock": {
-                "name": "Alarm"
+                "name": "Alarm",
+                "state": {
+                    "wrong_finger": "Wrong Fingerprint",
+                    "wrong_password": "Wrong Password",
+                    "low_battery": "Low Battery"
+                }
             },
             "battery": {
                 "name": "Battery"
@@ -168,6 +205,21 @@
             },
             "wrong_password": {
                 "name": "Wrong Password"
+            },
+            "unlock_ble": {
+                "name": "Bluetooth Unlock"
+            },
+            "unlock_fingerprint": {
+                "name": "Fingerprint Unlock"
+            },
+            "unlock_phone_remote": {
+                "name": "Remote Unlock (Phone)"
+            },
+            "unlock_password": {
+                "name": "Password Unlock"
+            },
+            "unlock_dynamic": {
+                "name": "Dynamic Password Unlock"
             }
         },
         "switch": {

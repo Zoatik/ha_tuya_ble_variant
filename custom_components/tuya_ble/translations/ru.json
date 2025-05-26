@@ -1,0 +1,306 @@
+{
+    "config": {
+        "abort": {
+            "no_unconfigured_devices": "Не найдено не настроенных устройств."
+        },
+        "error": {
+            "device_not_registered": "Устройство не зарегистрировано в облаке Tuya",
+            "invalid_auth": "Неверная аутентификация",
+            "login_error": "Ошибка входа ({code}): {msg}"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "device": {
+                "data": {
+                    "address": "Tuya BLE устройство"
+                },
+                "description": "Выберите Tuya BLE устройство для настройки. Устройство должно быть зарегистрировано в облаке через мобильное приложение. Рекомендуется отвязать устройство от Tuya Bluetooth шлюза, если он есть."
+            },
+            "login": {
+                "data": {
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Страна",
+                    "password": "Пароль",
+                    "username": "Аккаунт"
+                },
+                "description": "Tuya BLE требует получения ключа шифрования из облака Tuya. Почти всем устройствам требуется доступ к облаку только один раз при настройке.\n\nСмотрите документацию по интеграции Tuya для получения облачных учетных данных https://www.home-assistant.io/integrations/tuya/\n\nВведите свои учетные данные Tuya."
+            }
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "low_battery": {
+                "name": "Батарея"
+            }
+        },
+        "button": {
+            "push": {
+                "name": "Нажать"
+            },
+            "manual_lock": {
+                "name": "Ручная блокировка"
+            },
+            "bluetooth_unlock": {
+                "name": "Разблокировать"
+            }
+        },
+        "number": {
+            "brightness": {
+                "name": "Яркость"
+            },
+            "carbon_dioxide_alarm_level": {
+                "name": "Уровень тревоги"
+            },
+            "countdown_duration": {
+                "name": "Длительность полива"
+            },
+            "countdown_duration_z1": {
+                "name": "Длительность полива - Зона 1"
+            },
+            "countdown_duration_z2": {
+                "name": "Длительность полива - Зона 2"
+            },
+            "down_position": {
+                "name": "Нижнее положение"
+            },
+            "hold_time": {
+                "name": "Время удержания"
+            },
+            "program_idle_position": {
+                "name": "Положение ожидания"
+            },
+            "program_repeats_count": {
+                "name": "Количество повторов"
+            },
+            "recommended_water_intake": {
+                "name": "Рекомендуемый объем воды"
+            },
+            "reporting_period": {
+                "name": "Период отчётности"
+            },
+            "up_position": {
+                "name": "Верхнее положение"
+            }
+        },
+        "select": {
+            "beep_volume": {
+                "name": "Громкость замка",
+                "state": {
+                    "mute": "Без звука",
+                    "low": "Низкая",
+                    "medium": "Средняя",
+                    "high": "Высокая"
+                }
+            },
+            "fingerbot_mode": {
+                "name": "Режим",
+                "state": {
+                    "program": "Программа",
+                    "push": "Нажатие",
+                    "switch": "Переключатель"
+                }
+            },
+            "reminder_mode": {
+                "name": "Режим напоминания",
+                "state": {
+                    "interval_reminder": "Интервал",
+                    "schedule_reminder": "Расписание"
+                }
+            },
+            "temperature_unit": {
+                "name": "Единица температуры"
+            },
+            "language": {
+                "name": "Язык",
+                "state": {
+                    "chinese_simplified": "Китайский (упрощённый)",
+                    "english": "Английский",
+                    "japanese": "Японский",
+                    "german": "Немецкий",
+                    "spanish": "Испанский",
+                    "french": "Французский",
+                    "russian": "Русский",
+                    "korean": "Корейский"
+                }
+            },
+            "special_function": {
+                "name": "Антиблокировка",
+                "state": {
+                    "function1": "Выкл.",
+                    "function2": "Вкл."
+                }
+            }
+        },
+        "sensor": {
+            "alarm_lock": {
+                "name": "Тревога",
+                "state": {
+                    "wrong_finger": "Неверный отпечаток",
+                    "wrong_password": "Неверный пароль",
+                    "low_battery": "Низкий заряд батареи"
+                }
+            },
+            "battery": {
+                "name": "Батарея"
+            },
+            "battery_charging": {
+                "name": "Зарядка батареи",
+                "state": {
+                    "charged": "Заряжено",
+                    "charging": "Заряжается",
+                    "not_charging": "Не заряжается"
+                }
+            },
+            "battery_state": {
+                "name": "Состояние батареи",
+                "state": {
+                    "high": "Высокий",
+                    "low": "Низкий",
+                    "normal": "Нормальный"
+                }
+            },
+            "carbon_dioxide": {
+                "name": "Углекислый газ"
+            },
+            "carbon_dioxide_alarm": {
+                "name": "Уровень CO2",
+                "state": {
+                    "alarm": "Тревога",
+                    "normal": "Норма"
+                }
+            },
+            "humidity": {
+                "name": "Влажность"
+            },
+            "low_battery": {
+                "name": "Низкий заряд батареи"
+            },
+            "moisture": {
+                "name": "Влажность"
+            },
+            "residual_electricity": {
+                "name": "Батарея"
+            },
+            "signal_strength": {
+                "name": "Уровень сигнала"
+            },
+            "temperature": {
+                "name": "Температура"
+            },
+            "time_left": {
+                "name": "Оставшееся время полива"
+            },
+            "use_time_z1": {
+                "name": "Последний полив - Зона 1"
+            },
+            "use_time_z2": {
+                "name": "Последний полив - Зона 2"
+            },
+            "water_intake": {
+                "name": "Потребление воды"
+            },
+            "wrong_finger": {
+                "name": "Неверный отпечаток"
+            },
+            "wrong_password": {
+                "name": "Неверный пароль"
+            },
+            "unlock_ble": {
+                "name": "Bluetooth-разблокировка"
+            },
+            "unlock_fingerprint": {
+                "name": "Разблокировка по отпечатку"
+            },
+            "unlock_phone_remote": {
+                "name": "Удалённая разблокировка (телефон)"
+            },
+            "unlock_password": {
+                "name": "Разблокировка паролем"
+            },
+            "unlock_dynamic": {
+                "name": "Разблокировка динамическим паролем"
+            }
+        },
+        "switch": {
+            "antifreeze": {
+                "name": "Антизамерзание"
+            },
+            "carbon_dioxide_alarm_switch": {
+                "name": "Включение тревоги"
+            },
+            "carbon_dioxide_severely_exceed_alarm": {
+                "name": "Сильное превышение CO2"
+            },
+            "child_lock": {
+                "name": "Детский замок"
+            },
+            "lock_motor_state": {
+                "name": "Состояние мотора"
+            },
+            "low_battery_alarm": {
+                "name": "Тревога по батарее"
+            },
+            "manual_control": {
+                "name": "Ручное управление"
+            },
+            "program": {
+                "name": "Программа"
+            },
+            "program_repeat_forever": {
+                "name": "Повторять всегда"
+            },
+            "programming_mode": {
+                "name": "Режим программирования"
+            },
+            "programming_switch": {
+                "name": "Программируемый переключатель"
+            },
+            "reverse_positions": {
+                "name": "Обратные позиции"
+            },
+            "switch": {
+                "name": "Переключатель"
+            },
+            "water_scale_proof": {
+                "name": "Антинакипь"
+            },
+            "water_valve": {
+                "name": "Клапан полива"
+            },
+            "water_valve_z1": {
+                "name": "Клапан полива - Зона 1"
+            },
+            "water_valve_z2": {
+                "name": "Клапан полива - Зона 2"
+            },
+            "window_check": {
+                "name": "Проверка окна"
+            }
+        },
+        "text": {
+            "program": {
+                "name": "Программа: позиция[/время];..."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_registered": "Устройство не зарегистрировано в облаке Tuya",
+            "invalid_auth": "Неверная аутентификация",
+            "login_error": "Ошибка входа ({code}): {msg}"
+        },
+        "step": {
+            "login": {
+                "data": {
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Страна",
+                    "password": "Пароль",
+                    "username": "Аккаунт"
+                },
+                "description": "Смотрите документацию по интеграции Tuya для получения облачных учетных данных https://www.home-assistant.io/integrations/tuya/\n\nВведите свои учетные данные Tuya."
+            }
+        }
+    }
+}

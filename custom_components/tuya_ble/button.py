@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import base64
 import logging
 from typing import Callable
 
@@ -32,6 +33,7 @@ class TuyaBLEButtonMapping:
     force_add: bool = True
     dp_type: TuyaBLEDataPointType | None = None
     is_available: TuyaBLEButtonIsAvailable = None
+    value: str | None = None
 
 
 def is_fingerbot_in_push_mode(self: TuyaBLEButton, product: TuyaBLEProductInfo) -> bool:
@@ -72,7 +74,7 @@ mapping: dict[str, TuyaBLECategoryButtonMapping] = {
                 [
                     "blliqpsj",
                     "ndvkgsrm",
-                    "yiihr7zh", 
+                    "yiihr7zh",
                     "neq16kgd"
                 ],  # Fingerbot Plus
                 [
@@ -108,10 +110,34 @@ mapping: dict[str, TuyaBLECategoryButtonMapping] = {
             ],
         },
     ),
+    "ms": TuyaBLECategoryButtonMapping(
+        products={
+            "mqc2hevy":  # Smart Lock
+            [
+                TuyaBLEButtonMapping(
+                    dp_id=46,
+                    description=ButtonEntityDescription(
+                        key="manual_lock",
+                        icon="mdi:lock"
+                    ),
+                    dp_type=TuyaBLEDataPointType.DT_BOOL,
+                ),
+                TuyaBLEButtonMapping(
+                    dp_id=6,
+                    description=ButtonEntityDescription(
+                        key="bluetooth_unlock",
+                        icon="mdi:lock-open-variant"
+                    ),
+                    dp_type=TuyaBLEDataPointType.DT_RAW,
+                    value="AQE=",
+                ),
+            ],
+        },
+    ),
 }
 
 
-def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLECategoryButtonMapping]:
+def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLEButtonMapping]:
     category = mapping.get(device.category)
     if category is not None and category.products is not None:
         product_mapping = category.products.get(device.product_id)
@@ -141,13 +167,30 @@ class TuyaBLEButton(TuyaBLEEntity, ButtonEntity):
 
     def press(self) -> None:
         """Press the button."""
-        datapoint = self._device.datapoints.get_or_create(
-            self._mapping.dp_id,
-            TuyaBLEDataPointType.DT_BOOL,
-            False,
-        )
-        if datapoint:
-            self._hass.create_task(datapoint.set_value(not bool(datapoint.value)))
+        if (
+            self._mapping.dp_type == TuyaBLEDataPointType.DT_RAW
+            and self._mapping.value is not None
+        ):
+            try:
+                raw_value = base64.b64decode(self._mapping.value)
+            except Exception as e:
+                _LOGGER.error("Failed to decode base64 value for button %s: %s", self._mapping.description.key, e)
+                return
+            datapoint = self._device.datapoints.get_or_create(
+                self._mapping.dp_id,
+                TuyaBLEDataPointType.DT_RAW,
+                raw_value,
+            )
+            if datapoint:
+                self._hass.create_task(datapoint.set_value(raw_value))
+        else:
+            datapoint = self._device.datapoints.get_or_create(
+                self._mapping.dp_id,
+                TuyaBLEDataPointType.DT_BOOL,
+                False,
+            )
+            if datapoint:
+                self._hass.create_task(datapoint.set_value(not bool(datapoint.value)))
 
     @property
     def available(self) -> bool:
@@ -163,14 +206,17 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Tuya BLE sensors."""
+    """Set up the Tuya BLE buttons."""
     data: TuyaBLEData = hass.data[DOMAIN][entry.entry_id]
+    # get_mapping_by_device теперь возвращает список маппингов кнопок
     mappings = get_mapping_by_device(data.device)
+    # Если вдруг вернулся список категорий, а не маппингов, нужно получить маппинги
+    # (но по текущей логике get_mapping_by_device должен возвращать именно список TuyaBLEButtonMapping)
     entities: list[TuyaBLEButton] = []
     for mapping in mappings:
-        if mapping.force_add or data.device.datapoints.has_id(
+        if hasattr(mapping, "dp_id") and (mapping.force_add or data.device.datapoints.has_id(
             mapping.dp_id, mapping.dp_type
-        ):
+        )):
             entities.append(
                 TuyaBLEButton(
                     hass,

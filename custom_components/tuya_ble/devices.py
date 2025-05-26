@@ -2,6 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
+from typing import Any
 import logging
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_ID
 
@@ -17,6 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+import datetime
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from .tuya_ble import (
@@ -48,12 +50,19 @@ class TuyaBLEFingerbotInfo:
     manual_control: int = 0
     program: int = 0
 
+@dataclass
+class TuyaBLELockInfo:
+    alarm_lock: int
+    unlock_ble: int
+    unlock_fingerprint: int
+    unlock_password: int
 
 @dataclass
 class TuyaBLEProductInfo:
     name: str
     manufacturer: str = DEVICE_DEF_MANUFACTURER
     fingerbot: TuyaBLEFingerbotInfo | None = None
+    lock: TuyaBLELockInfo | None = None
 
 
 class TuyaBLEEntity(CoordinatorEntity):
@@ -93,7 +102,7 @@ class TuyaBLEEntity(CoordinatorEntity):
         self.async_write_ha_state()
 
 
-class TuyaBLECoordinator(DataUpdateCoordinator[None]):
+class TuyaBLECoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data coordinator for receiving Tuya BLE updates."""
 
     def __init__(self, hass: HomeAssistant, device: TuyaBLEDevice) -> None:
@@ -126,7 +135,7 @@ class TuyaBLECoordinator(DataUpdateCoordinator[None]):
     def _async_handle_update(self, updates: list[TuyaBLEDataPoint]) -> None:
         """Just trigger the callbacks."""
         self._async_handle_connect()
-        self.async_set_updated_data(None)
+        self.async_set_updated_data({})
         info = get_device_product_info(self._device)
         if info and info.fingerbot and info.fingerbot.manual_control != 0:
             for update in updates:
@@ -139,8 +148,53 @@ class TuyaBLECoordinator(DataUpdateCoordinator[None]):
                         },
                     )
 
+        # Handle lock events
+        if info and info.lock:
+            for update in updates:
+                if update.changed_by_device:
+                    if update.id == info.lock.alarm_lock:
+                        self.hass.bus.fire(
+                            f"{DOMAIN}_lock_alarm_event",
+                            {
+                                CONF_ADDRESS: self._device.address,
+                                CONF_DEVICE_ID: self._device.device_id,
+                                "event": "alarm_lock",
+                                "value": update.value,
+                            },
+                        )
+                    elif update.id == info.lock.unlock_ble:
+                        self.hass.bus.fire(
+                            f"{DOMAIN}_lock_unlock_ble_event",
+                            {
+                                CONF_ADDRESS: self._device.address,
+                                CONF_DEVICE_ID: self._device.device_id,
+                                "event": "unlock_ble",
+                                "value": update.value,
+                            },
+                        )
+                    elif update.id == info.lock.unlock_fingerprint:
+                        self.hass.bus.fire(
+                            f"{DOMAIN}_lock_unlock_fingerprint_event",
+                            {
+                            CONF_ADDRESS: self._device.address,
+                            CONF_DEVICE_ID: self._device.device_id,
+                            "event": "unlock_fingerprint",
+                            "value": update.value,
+                            },
+                        )
+                    elif update.id == info.lock.unlock_password:
+                        self.hass.bus.fire(
+                            f"{DOMAIN}_lock_unlock_password_event",
+                            {
+                            CONF_ADDRESS: self._device.address,
+                            CONF_DEVICE_ID: self._device.device_id,
+                            "event": "unlock_password",
+                            "value": update.value,
+                            },
+                        )
+
     @callback
-    def _set_disconnected(self, _: None) -> None:
+    def _set_disconnected(self, _: "datetime.datetime") -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self._disconnected = True
         self._unsub_disconnect = None
@@ -186,10 +240,20 @@ devices_database: dict[str, TuyaBLECategoryInfo] = {
             **dict.fromkeys(
                 [
                     "ludzroix",
-                    "isk2p555"
+                    "isk2p555",
+                    "yy2bmcoh",
                 ],
                     TuyaBLEProductInfo(  # device product_id
                     name="Smart Lock",
+                ),
+            ),
+            "mqc2hevy": TuyaBLEProductInfo(  # device product_id
+                name="Smart Lock",
+                lock=TuyaBLELockInfo(
+                    alarm_lock=21,
+                    unlock_ble=19,
+                    unlock_fingerprint=12,
+                    unlock_password=13,
                 ),
             ),
         },
@@ -222,7 +286,7 @@ devices_database: dict[str, TuyaBLECategoryInfo] = {
                 [
                     "blliqpsj",
                     "ndvkgsrm",
-                    "yiihr7zh", 
+                    "yiihr7zh",
                     "neq16kgd"
                 ],  # device product_ids
                 TuyaBLEProductInfo(
@@ -268,10 +332,10 @@ devices_database: dict[str, TuyaBLECategoryInfo] = {
         products={
             **dict.fromkeys(
             [
-            "drlajpqc", 
+            "drlajpqc",
             "nhj2j7su",
             ],  # device product_id
-            TuyaBLEProductInfo(  
+            TuyaBLEProductInfo(
                 name="Thermostatic Radiator Valve",
                 ),
             ),
@@ -296,10 +360,10 @@ devices_database: dict[str, TuyaBLECategoryInfo] = {
         products={
             **dict.fromkeys(
                 [
-                "6pahkcau", 
+                "6pahkcau",
                 "hfgdqhho",
                 ],  # device product_id
-                TuyaBLEProductInfo( 
+                TuyaBLEProductInfo(
                     name="Irrigation computer",
                 ),
             ),

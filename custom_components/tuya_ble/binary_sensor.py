@@ -67,6 +67,19 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
             ],
         },
     ),
+    "ms": TuyaBLECategoryBinarySensorMapping(
+        products={
+            "mqc2hevy": [  # Smart Lock
+                TuyaBLEBinarySensorMapping(
+                    dp_id=47,
+                    description=BinarySensorEntityDescription(
+                        key="lock_motor_state",
+                        device_class=BinarySensorDeviceClass.LOCK,
+                    ),
+                ),
+            ],
+        },
+    ),
 }
 
 
