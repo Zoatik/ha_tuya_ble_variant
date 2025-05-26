@@ -8,9 +8,9 @@ from typing import Any, Callable
 
 from homeassistant.components.number import (
     NumberEntityDescription,
-    NumberEntity,
+    NumberMode,
 )
-from homeassistant.components.number.const import NumberDeviceClass, NumberMode
+from homeassistant.components.number import NumberEntity as BaseNumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -23,11 +23,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
+from homeassistant.components.bluetooth.passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
+from .devices import TuyaBLEData, TuyaBLEEntity, TuyaBLEProductInfo, TuyaBLEPassiveCoordinator
 from .const import DOMAIN
-from .devices import TuyaBLEData, TuyaBLEEntity, TuyaBLEProductInfo
 from .tuya_ble import TuyaBLEDataPointType, TuyaBLEDevice
+from homeassistant.components.number.const import NumberDeviceClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -510,27 +510,32 @@ mapping: dict[str, TuyaBLECategoryNumberMapping] = {
 }
 
 
-def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLECategoryNumberMapping]:
+def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLENumberMapping]:
     category = mapping.get(device.category)
+    result: list[TuyaBLENumberMapping] = []
     if category is not None and category.products is not None:
         product_mapping = category.products.get(device.product_id)
         if product_mapping is not None:
-            return product_mapping
-        if category.mapping is not None:
-            return category.mapping
-        else:
-            return []
-    else:
-        return []
+            result.extend(product_mapping)
+    if category is not None and category.mapping is not None:
+        result.extend(category.mapping)
+    return result
 
 
-class TuyaBLENumber(TuyaBLEEntity, NumberEntity):
+class TuyaBLENumber(TuyaBLEEntity):
     """Representation of a Tuya BLE Number."""
+
+    _attr_entity_category = None
+    _attr_native_min_value = None
+    _attr_native_max_value = None
+    _attr_native_step = None
+    _attr_native_unit_of_measurement = None
+    _attr_mode = None
 
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TuyaBLEPassiveCoordinator,
         device: TuyaBLEDevice,
         product: TuyaBLEProductInfo,
         mapping: TuyaBLENumberMapping,
@@ -538,22 +543,23 @@ class TuyaBLENumber(TuyaBLEEntity, NumberEntity):
         super().__init__(hass, coordinator, device, product, mapping.description)
         self._mapping = mapping
         self._attr_mode = mapping.mode
+        self._attr_native_min_value = mapping.description.native_min_value
+        self._attr_native_max_value = mapping.description.native_max_value
+        self._attr_native_step = mapping.description.native_step
+        self._attr_native_unit_of_measurement = mapping.description.native_unit_of_measurement
+        self._attr_entity_category = mapping.description.entity_category
 
     @property
     def native_value(self) -> float | None:
-        """Return the entity value to represent the entity state."""
-        if self._mapping.getter:
+        if self._mapping.getter is not None:
             return self._mapping.getter(self, self._product)
-
         datapoint = self._device.datapoints[self._mapping.dp_id]
-        if datapoint:
+        if datapoint and isinstance(datapoint.value, (int, float)):
             return datapoint.value / self._mapping.coefficient
-
         return self._mapping.description.native_min_value
 
-    def set_native_value(self, value: float) -> None:
-        """Set new value."""
-        if self._mapping.setter:
+    async def async_set_native_value(self, value: float) -> None:
+        if self._mapping.setter is not None:
             self._mapping.setter(self, self._product, value)
             return
         int_value = int(value * self._mapping.coefficient)
@@ -563,15 +569,10 @@ class TuyaBLENumber(TuyaBLEEntity, NumberEntity):
             int(int_value),
         )
         if datapoint:
-            self._hass.create_task(datapoint.set_value(int_value))
+            await datapoint.set_value(int_value)
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        result = super().available
-        if result and self._mapping.is_available:
-            result = self._mapping.is_available(self, self._product)
-        return result
+    # Свойство available не определяется, используется только базовое
+    # ...existing code...
 
 
 async def async_setup_entry(
@@ -579,7 +580,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Tuya BLE sensors."""
+    """Set up the Tuya BLE numbers."""
     data: TuyaBLEData = hass.data[DOMAIN][entry.entry_id]
     mappings = get_mapping_by_device(data.device)
     entities: list[TuyaBLENumber] = []

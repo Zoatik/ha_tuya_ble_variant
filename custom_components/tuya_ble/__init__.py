@@ -6,6 +6,7 @@ import logging
 from bleak_retry_connector import BLEAK_RETRY_EXCEPTIONS as BLEAK_EXCEPTIONS, get_device
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
@@ -16,7 +17,12 @@ from .tuya_ble import TuyaBLEDevice
 
 from .cloud import HASSTuyaBLEDeviceManager
 from .const import DOMAIN
-from .devices import TuyaBLECoordinator, TuyaBLEData, get_device_product_info
+from .devices import (
+    TuyaBLECoordinator,
+    TuyaBLEData,
+    TuyaBLEPassiveCoordinator,
+    get_device_product_info,
+)
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
@@ -46,8 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device = TuyaBLEDevice(manager, ble_device)
     await device.initialize()
     product_info = get_device_product_info(device)
+    if product_info is None:
+        raise ConfigEntryNotReady(f"Could not determine product info for Tuya BLE device with address {address}")
 
-    coordinator = TuyaBLECoordinator(hass, device)
+    coordinator = TuyaBLEPassiveCoordinator(hass, _LOGGER, address, device)
 
     '''
     try:
@@ -73,8 +81,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         bluetooth.async_register_callback(
             hass,
             _async_update_ble,
-            BluetoothCallbackMatcher({ADDRESS: address}),
-            bluetooth.BluetoothScanningMode.ACTIVE,
+            BluetoothCallbackMatcher(address=address),
+            BluetoothScanningMode.ACTIVE,
         )
     )
 

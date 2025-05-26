@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .devices import TuyaBLEData, TuyaBLEEntity, TuyaBLEProductInfo
+from .devices import TuyaBLEData, TuyaBLEEntity, TuyaBLEProductInfo, TuyaBLEPassiveCoordinator
 from .tuya_ble import TuyaBLEDataPoint, TuyaBLEDataPointType, TuyaBLEDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ mapping: dict[str, TuyaBLECategoryClimateMapping] = {
         products={
             **dict.fromkeys(
                 [
-                "drlajpqc", 
+                "drlajpqc",
                 "nhj2j7su",
                 ],  # Thermostatic Radiator Valve
                 [
@@ -152,7 +152,7 @@ class TuyaBLEClimate(TuyaBLEEntity, ClimateEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TuyaBLEPassiveCoordinator,
         device: TuyaBLEDevice,
         product: TuyaBLEProductInfo,
         mapping: TuyaBLEClimateMapping,

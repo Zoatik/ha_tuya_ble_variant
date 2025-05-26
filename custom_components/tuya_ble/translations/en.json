@@ -89,7 +89,7 @@
                 "state": {
                     "mute": "Mute",
                     "low": "Low",
-                    "medium": "Medium",
+                    "normal": "Medium",
                     "high": "High"
                 }
             },

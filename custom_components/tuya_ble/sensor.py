@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.components.bluetooth.passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
 from .const import (
     BATTERY_STATE_HIGH,
     BATTERY_STATE_LOW,
@@ -33,7 +34,7 @@ from .const import (
     CO2_LEVEL_NORMAL,
     DOMAIN,
 )
-from .devices import TuyaBLEData, TuyaBLEEntity, TuyaBLEProductInfo
+from .devices import TuyaBLEData, TuyaBLEEntity, TuyaBLEProductInfo, TuyaBLEPassiveCoordinator
 from .tuya_ble import TuyaBLEDataPointType, TuyaBLEDevice
 _LOGGER = logging.getLogger(__name__)
 SIGNAL_STRENGTH_DP_ID = -1
@@ -452,7 +453,7 @@ class TuyaBLESensor(TuyaBLEEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: DataUpdateCoordinator,
+        coordinator: TuyaBLEPassiveCoordinator,
         device: TuyaBLEDevice,
         product: TuyaBLEProductInfo,
         mapping: TuyaBLESensorMapping,
@@ -464,38 +465,37 @@ class TuyaBLESensor(TuyaBLEEntity, SensorEntity):
         """Handle updated data from the coordinator."""
         if self._mapping.getter is not None:
             self._mapping.getter(self)
+            self.async_write_ha_state()
+            return
+        datapoint = self._device.datapoints[self._mapping.dp_id]
+        if not datapoint:
+            self.async_write_ha_state()
+            return
+        value = datapoint.value
+        if isinstance(value, (int, float)) and hasattr(datapoint, "type"):
+            if datapoint.type == TuyaBLEDataPointType.DT_ENUM:
+                self._handle_enum_value(datapoint, value)
+            elif datapoint.type == TuyaBLEDataPointType.DT_VALUE:
+                self._attr_native_value = value / self._mapping.coefficient
+            else:
+                self._attr_native_value = value
+        elif isinstance(value, bool):
+            self._attr_native_value = int(value)
         else:
-            datapoint = self._device.datapoints[self._mapping.dp_id]
-            if datapoint:
-                if datapoint.type == TuyaBLEDataPointType.DT_ENUM:
-                    if self.entity_description.options is not None:
-                        if datapoint.value >= 0 and datapoint.value < len(
-                            self.entity_description.options
-                        ):
-                            self._attr_native_value = self.entity_description.options[
-                                datapoint.value
-                            ]
-                        else:
-                            self._attr_native_value = datapoint.value
-                    if self._mapping.icons is not None:
-                        if datapoint.value >= 0 and datapoint.value < len(
-                            self._mapping.icons
-                        ):
-                            self._attr_icon = self._mapping.icons[datapoint.value]
-                elif datapoint.type == TuyaBLEDataPointType.DT_VALUE:
-                    self._attr_native_value = (
-                        datapoint.value / self._mapping.coefficient
-                    )
-                else:
-                    self._attr_native_value = datapoint.value
+            self._attr_native_value = str(value)
         self.async_write_ha_state()
+
+    def _handle_enum_value(self, datapoint, value):
+        if self.entity_description.options is not None and 0 <= value < len(self.entity_description.options):
+            self._attr_native_value = self.entity_description.options[value]
+        else:
+            self._attr_native_value = value
+        if self._mapping.icons is not None and 0 <= value < len(self._mapping.icons):
+            self._attr_icon = self._mapping.icons[value]
     @property
     def available(self) -> bool:
-        """Return if entity is available."""
-        result = super().available
-        if result and self._mapping.is_available:
-            result = self._mapping.is_available(self, self._product)
-        return result
+        """Return True if entity is available."""
+        return super().available
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
