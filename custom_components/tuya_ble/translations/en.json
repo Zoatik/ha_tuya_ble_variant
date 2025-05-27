@@ -220,6 +220,18 @@
             },
             "unlock_dynamic": {
                 "name": "Dynamic Password Unlock"
+            },
+            "last_unlock_method": {
+                "name": "Last Unlock",
+                "state": {
+                    "ble": "Bluetooth",
+                    "fingerprint": "Fingerprint",
+                    "phone_remote": "Remote (Phone)",
+                    "password": "Password",
+                    "dynamic": "Dynamic Password",
+                    "temporary": "Temporary Password",
+                    "voice_remote": "Voice Remote"
+                }
             }
         },
         "switch": {

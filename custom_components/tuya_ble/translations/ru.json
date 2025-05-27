@@ -220,6 +220,18 @@
             },
             "unlock_dynamic": {
                 "name": "Разблокировка динамическим паролем"
+            },
+            "last_unlock_method": {
+                "name": "Последнее открытие",
+                "state": {
+                    "ble": "Bluetooth",
+                    "fingerprint": "Отпечаток",
+                    "phone_remote": "Удалённо (телефон)",
+                    "password": "Пароль",
+                    "dynamic": "Динамический пароль",
+                    "temporary": "Временный пароль",
+                    "voice_remote": "Удалённо (голос)"
+                }
             }
         },
         "switch": {

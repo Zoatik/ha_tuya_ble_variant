@@ -95,7 +95,7 @@ def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLEBinarySensorMapp
     return result
 
 
-class TuyaBLEBinarySensor(TuyaBLEEntity):
+class TuyaBLEBinarySensor(TuyaBLEEntity, BinarySensorEntity):
     """Representation of a Tuya BLE binary sensor."""
 
     def __init__(
@@ -119,8 +119,6 @@ class TuyaBLEBinarySensor(TuyaBLEEntity):
             if datapoint:
                 self._attr_is_on = bool(datapoint.value)
         self.async_write_ha_state()
-
-    # Свойство available не определяется, используется только базовое
 
 
 async def async_setup_entry(

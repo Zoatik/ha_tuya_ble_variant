@@ -49,6 +49,17 @@ class TuyaBLESensorMapping:
     coefficient: float = 1.0
     icons: list[str] | None = None
     is_available: TuyaBLESensorIsAvailable = None
+
+@dataclass
+class TuyaBLELastUnlockSensorMapping:
+    unlock_methods: dict[int, str]
+    description: SensorEntityDescription = field(
+        default_factory=lambda: SensorEntityDescription(
+            key="last_unlock_method",
+            icon="mdi:account-lock-open",
+            name="Last Unlock Method",
+        )
+    )
 @dataclass
 class TuyaBLEBatteryMapping(TuyaBLESensorMapping):
     description: SensorEntityDescription = field(
@@ -82,8 +93,8 @@ def battery_enum_getter(self: TuyaBLESensor) -> None:
         self._attr_native_value = datapoint.value * 20.0
 @dataclass
 class TuyaBLECategorySensorMapping:
-    products: dict[str, list[TuyaBLESensorMapping]] | None = None
-    mapping: list[TuyaBLESensorMapping] | None = None
+    products: dict[str, list[TuyaBLESensorMapping|TuyaBLELastUnlockSensorMapping]] | None = None
+    mapping: list[TuyaBLESensorMapping|TuyaBLELastUnlockSensor] | None = None
 mapping: dict[str, TuyaBLECategorySensorMapping] = {
     "co2bj": TuyaBLECategorySensorMapping(
         products={
@@ -159,50 +170,16 @@ mapping: dict[str, TuyaBLECategorySensorMapping] = {
                     ),
                 ),
                 TuyaBLEBatteryMapping(dp_id=8),
-                TuyaBLESensorMapping(
-                    dp_id=19,
-                    description=SensorEntityDescription(
-                        key="unlock_ble",
-                        icon="mdi:bluetooth",
-                        suggested_display_precision=0,
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    ),
-                ),
-                TuyaBLESensorMapping(
-                    dp_id=12,
-                    description=SensorEntityDescription(
-                        key="unlock_fingerprint",
-                        icon="mdi:fingerprint",
-                        suggested_display_precision=0,
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    ),
-                ),
-                TuyaBLESensorMapping(
-                    dp_id=62,
-                    description=SensorEntityDescription(
-                        key="unlock_phone_remote",
-                        icon="mdi:cellphone-lock",
-                        suggested_display_precision=0,
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    ),
-                ),
-                TuyaBLESensorMapping(
-                    dp_id=13,
-                    description=SensorEntityDescription(
-                        key="unlock_password",
-                        icon="mdi:numeric-0-box-multiple-outline",
-                        suggested_display_precision=0,
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    ),
-                ),
-                TuyaBLESensorMapping(
-                    dp_id=14,
-                    description=SensorEntityDescription(
-                        key="unlock_dynamic",
-                        icon="mdi:lock-reset",
-                        suggested_display_precision=0,
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    ),
+                TuyaBLELastUnlockSensorMapping(
+                    unlock_methods={
+                        19: "ble",
+                        12: "fingerprint",
+                        62: "phone_remote",
+                        13: "password",
+                        14: "dynamic",
+                        55: "temporary",
+                        63: "voice_remote"
+                    }
                 ),
             ]
         }
@@ -448,7 +425,7 @@ def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLESensorMapping]:
             return []
     else:
         return []
-class TuyaBLESensor(TuyaBLEEntity, SensorEntity):
+class TuyaBLESensor(SensorEntity, TuyaBLEEntity):
     """Representation of a Tuya BLE sensor."""
     def __init__(
         self,
@@ -460,6 +437,7 @@ class TuyaBLESensor(TuyaBLEEntity, SensorEntity):
     ) -> None:
         super().__init__(hass, coordinator, device, product, mapping.description)
         self._mapping = mapping
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -492,10 +470,49 @@ class TuyaBLESensor(TuyaBLEEntity, SensorEntity):
             self._attr_native_value = value
         if self._mapping.icons is not None and 0 <= value < len(self._mapping.icons):
             self._attr_icon = self._mapping.icons[value]
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available
+
+class TuyaBLELastUnlockSensor(SensorEntity, TuyaBLEEntity):
+    """Сенсор, отражающий последний способ разблокировки и его данные."""
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TuyaBLEPassiveCoordinator,
+        device: TuyaBLEDevice,
+        product: TuyaBLEProductInfo,
+        mapping: TuyaBLELastUnlockSensorMapping,
+    ) -> None:
+        super().__init__(hass, coordinator, device, product, mapping.description)
+        self._unlock_methods = mapping.unlock_methods
+        self._attr_native_value = None
+        self._attr_extra_state_attributes = {}
+        self._last_values = {dp_id: None for dp_id in mapping.unlock_methods.keys()}
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        last_method = None
+        last_value = None
+        last_time = None
+        for dp_id in self._unlock_methods.keys():
+            if self._device.datapoints.has_id(dp_id):
+                dp = self._device.datapoints[dp_id]
+                if dp is not None:
+                    dp_value = getattr(dp, 'value', None)
+                    dp_time = getattr(dp, 'timestamp', None)
+                    if dp_time is not None:
+                        if last_time is None or dp_time > last_time:
+                            last_time = dp_time
+                            last_method = self._unlock_methods.get(dp_id, str(dp_id))
+                            last_value = dp_value
+                    elif dp_value is not None:
+                        if self._last_values[dp_id] != dp_value:
+                            last_method = self._unlock_methods.get(dp_id, str(dp_id))
+                            last_value = dp_value
+                            self._last_values[dp_id] = dp_value
+        if last_method is not None:
+            self._attr_native_value = last_method
+            self._attr_extra_state_attributes = {"method": last_method, "value": last_value}
+        self.async_write_ha_state()
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -504,7 +521,7 @@ async def async_setup_entry(
     """Set up the Tuya BLE sensors."""
     data: TuyaBLEData = hass.data[DOMAIN][entry.entry_id]
     mappings = get_mapping_by_device(data.device)
-    entities: list[TuyaBLESensor] = [
+    entities: list[TuyaBLESensor|TuyaBLELastUnlockSensor] = [
         TuyaBLESensor(
             hass,
             data.coordinator,
@@ -513,8 +530,19 @@ async def async_setup_entry(
             rssi_mapping,
         )
     ]
+
     for mapping in mappings:
-        if mapping.force_add or data.device.datapoints.has_id(
+        if isinstance(mapping, TuyaBLELastUnlockSensorMapping):
+            entities.append(
+                TuyaBLELastUnlockSensor(
+                    hass,
+                    data.coordinator,
+                    data.device,
+                    data.product,
+                    mapping,
+                )
+            )
+        elif mapping.force_add or data.device.datapoints.has_id(
             mapping.dp_id, mapping.dp_type
         ):
             entities.append(
