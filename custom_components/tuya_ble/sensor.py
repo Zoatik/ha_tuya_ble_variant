@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+    RestoreSensor
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -90,7 +91,11 @@ def is_co2_alarm_enabled(self: TuyaBLESensor, product: TuyaBLEProductInfo) -> bo
 def battery_enum_getter(self: TuyaBLESensor) -> None:
     datapoint = self._device.datapoints[104]
     if datapoint:
-        self._attr_native_value = datapoint.value * 20.0
+        try:
+            value = int(datapoint.value)
+            self._attr_native_value = value * 20
+        except (ValueError, TypeError):
+            self._attr_native_value = None
 @dataclass
 class TuyaBLECategorySensorMapping:
     products: dict[str, list[TuyaBLESensorMapping|TuyaBLELastUnlockSensorMapping]] | None = None
@@ -425,7 +430,7 @@ def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLESensorMapping]:
             return []
     else:
         return []
-class TuyaBLESensor(SensorEntity, TuyaBLEEntity):
+class TuyaBLESensor(RestoreSensor, SensorEntity, TuyaBLEEntity):
     """Representation of a Tuya BLE sensor."""
     def __init__(
         self,
@@ -438,6 +443,17 @@ class TuyaBLESensor(SensorEntity, TuyaBLEEntity):
         super().__init__(hass, coordinator, device, product, mapping.description)
         self._mapping = mapping
 
+    async def async_added_to_hass(self):
+        """Restore state after HA restart."""
+        await super().async_added_to_hass()
+        if self._attr_native_value is not None:
+            return
+        last_sensor_data = await self.async_get_last_sensor_data()
+        if last_sensor_data is not None:
+            self._attr_native_value = last_sensor_data.native_value
+            self._attr_native_unit_of_measurement = last_sensor_data.native_unit_of_measurement
+            self.async_write_ha_state()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -446,8 +462,7 @@ class TuyaBLESensor(SensorEntity, TuyaBLEEntity):
             self.async_write_ha_state()
             return
         datapoint = self._device.datapoints[self._mapping.dp_id]
-        if not datapoint:
-            self.async_write_ha_state()
+        if not datapoint or datapoint.value is None:
             return
         value = datapoint.value
         if isinstance(value, (int, float)) and hasattr(datapoint, "type"):
@@ -472,7 +487,7 @@ class TuyaBLESensor(SensorEntity, TuyaBLEEntity):
             self._attr_icon = self._mapping.icons[value]
 
 class TuyaBLELastUnlockSensor(SensorEntity, TuyaBLEEntity):
-    """Сенсор, отражающий последний способ разблокировки и его данные."""
+    """Sensor reflecting the last unlock method and its data."""
     def __init__(
         self,
         hass: HomeAssistant,

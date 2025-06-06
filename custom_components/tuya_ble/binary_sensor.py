@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.bluetooth.passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
 
@@ -95,7 +96,7 @@ def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLEBinarySensorMapp
     return result
 
 
-class TuyaBLEBinarySensor(TuyaBLEEntity, BinarySensorEntity):
+class TuyaBLEBinarySensor(RestoreEntity, TuyaBLEEntity, BinarySensorEntity):
     """Representation of a Tuya BLE binary sensor."""
 
     def __init__(
@@ -109,6 +110,15 @@ class TuyaBLEBinarySensor(TuyaBLEEntity, BinarySensorEntity):
         super().__init__(hass, coordinator, device, product, mapping.description)
         self._mapping = mapping
 
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        if self._attr_is_on is not None:
+            return
+        last_state = await self.async_get_last_state()
+        if last_state is not None:
+            self._attr_is_on = last_state.state == "on"
+            self.async_write_ha_state()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -116,7 +126,7 @@ class TuyaBLEBinarySensor(TuyaBLEEntity, BinarySensorEntity):
             self._mapping.getter(self)
         else:
             datapoint = self._device.datapoints[self._mapping.dp_id]
-            if datapoint:
+            if datapoint is not None and getattr(datapoint, "value", None) is not None:
                 self._attr_is_on = bool(datapoint.value)
         self.async_write_ha_state()
 
