@@ -248,7 +248,7 @@
                 "name": "Детский замок"
             },
             "lock_motor_state": {
-                "name": "Состояние мотора"
+                "name": "Замок"
             },
             "low_battery_alarm": {
                 "name": "Тревога по батарее"

@@ -96,6 +96,19 @@ def set_fingerbot_program_repeat_forever(
             )
             self._hass.create_task(datapoint.set_value(new_value))
 
+# --- Кастомные getter/setter для замка ---
+def lock_switch_setter(self: TuyaBLESwitch, product: TuyaBLEProductInfo, value: bool) -> None:
+    if value:
+        import base64
+        raw_value = base64.b64decode("AQE=")
+        datapoint = self._device.datapoints.get_or_create(6, TuyaBLEDataPointType.DT_RAW, raw_value)
+        if datapoint:
+            self._hass.create_task(datapoint.set_value(raw_value))
+    else:
+        datapoint = self._device.datapoints.get_or_create(46, TuyaBLEDataPointType.DT_BOOL, False)
+        if datapoint:
+            self._hass.create_task(datapoint.set_value(True))
+
 
 @dataclass
 class TuyaBLEFingerbotSwitchMapping(TuyaBLESwitchMapping):
@@ -173,6 +186,17 @@ mapping: dict[str, TuyaBLECategorySwitchMapping] = {
                     ),
                 ]
             ),
+            "mqc2hevy":  # Smart Lock
+            [
+                TuyaBLESwitchMapping(
+                    dp_id=47,
+                    description=SwitchEntityDescription(
+                        key="lock_motor_state",
+                        icon="mdi:lock"
+                    ),
+                    setter=lock_switch_setter,
+                ),
+            ]
         }
     ),
     "szjqr": TuyaBLECategorySwitchMapping(

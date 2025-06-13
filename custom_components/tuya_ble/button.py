@@ -113,28 +113,7 @@ mapping: dict[str, TuyaBLECategoryButtonMapping] = {
         },
     ),
     "ms": TuyaBLECategoryButtonMapping(
-        products={
-            "mqc2hevy":  # Smart Lock
-            [
-                TuyaBLEButtonMapping(
-                    dp_id=46,
-                    description=ButtonEntityDescription(
-                        key="manual_lock",
-                        icon="mdi:lock"
-                    ),
-                    dp_type=TuyaBLEDataPointType.DT_BOOL,
-                ),
-                TuyaBLEButtonMapping(
-                    dp_id=6,
-                    description=ButtonEntityDescription(
-                        key="bluetooth_unlock",
-                        icon="mdi:lock-open-variant"
-                    ),
-                    dp_type=TuyaBLEDataPointType.DT_RAW,
-                    value="AQE=",
-                ),
-            ],
-        },
+        products={},
     ),
 }
 
