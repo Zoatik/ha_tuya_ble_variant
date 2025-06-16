@@ -469,7 +469,12 @@ class TuyaBLESensor(RestoreSensor, SensorEntity, TuyaBLEEntity):
             if datapoint.type == TuyaBLEDataPointType.DT_ENUM:
                 self._handle_enum_value(datapoint, value)
             elif datapoint.type == TuyaBLEDataPointType.DT_VALUE:
-                self._attr_native_value = value / self._mapping.coefficient
+                result = value / self._mapping.coefficient
+                # Округлять до int для батарейных сенсоров
+                if getattr(self.entity_description, "device_class", None) == SensorDeviceClass.BATTERY:
+                    self._attr_native_value = int(result)
+                else:
+                    self._attr_native_value = result
             else:
                 self._attr_native_value = value
         elif isinstance(value, bool):
