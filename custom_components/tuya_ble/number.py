@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.components.number import NumberEntity as BaseNumberEntity
+from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -541,7 +541,7 @@ def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLENumberMapping]:
     return result
 
 
-class TuyaBLENumber(TuyaBLEEntity):
+class TuyaBLENumber(TuyaBLEEntity, NumberEntity):
     """Representation of a Tuya BLE Number."""
 
     _attr_entity_category = None
