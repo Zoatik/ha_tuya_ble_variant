@@ -124,7 +124,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="low_temp",
-                        name="Low Temperature",
+                        mame="Low Temperature",
                         device_class=BinarySensorDeviceClass.COLD,
                     ),
                     bit=5,
