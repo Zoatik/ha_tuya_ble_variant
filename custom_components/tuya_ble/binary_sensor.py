@@ -79,7 +79,6 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="low_battery",
-                        name="Low Battery",
                         device_class=BinarySensorDeviceClass.BATTERY,
                     ),
                     bit=0,
@@ -88,7 +87,6 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="fault",
-                        name="Fault",
                         device_class=BinarySensorDeviceClass.PROBLEM,
                     ),
                     bit=1,
@@ -97,7 +95,6 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="lack_water",
-                        name="Lack of Water",
                         icon="mdi:water-off",
                     ),
                     bit=2,
@@ -106,7 +103,6 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="sensor_fault",
-                        name="Sensor Fault",
                         device_class=BinarySensorDeviceClass.PROBLEM,
                     ),
                     bit=3,
@@ -115,7 +111,6 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="motor_fault",
-                        name="Motor Fault",
                         device_class=BinarySensorDeviceClass.PROBLEM,
                     ),
                     bit=4,
@@ -124,7 +119,6 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     dp_id=4,
                     description=BinarySensorEntityDescription(
                         key="low_temp",
-                        mame="Low Temperature",
                         device_class=BinarySensorDeviceClass.COLD,
                     ),
                     bit=5,
