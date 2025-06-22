@@ -133,7 +133,15 @@ mapping: dict[str, TuyaBLECategorySensorMapping] = {
                         entity_category=EntityCategory.DIAGNOSTIC,
                     ),
                 ),
-                TuyaBLEBatteryMapping(dp_id=7),
+                TuyaBLESensorMapping(
+                    dp_id=7,
+                    description=SensorEntityDescription(
+                        key="battery_percentage",
+                        icon="mdi:battery",
+                        unit_of_measurement="%",
+                    ),
+                    dp_type=TuyaBLEDataPointType.DT_VALUE,
+                ) ,
                 TuyaBLESensorMapping(
                     dp_id=15,
                     description=SensorEntityDescription(
