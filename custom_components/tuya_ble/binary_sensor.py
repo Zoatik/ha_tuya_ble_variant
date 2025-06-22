@@ -82,7 +82,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                     description=BinarySensorEntityDescription(
                         key="switch",
                         name="switch status",
-                        device_class=BinarySensorDeviceClass.DIAGNOSTIC,
+                        device_class=BinarySensorDeviceClass.OPENING,
                     ),
                 ),
                 TuyaBLEBinarySensorMapping(
