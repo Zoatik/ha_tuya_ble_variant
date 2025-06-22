@@ -223,6 +223,7 @@ mapping: dict[str, TuyaBLECategoryNumberMapping] = {
                     dp_id=11,
                     description=NumberEntityDescription(
                         key="countdown",
+                        name="Countdown",
                         icon="mdi:timer",
                         native_max_value=86400,
                         native_min_value=0,
@@ -567,6 +568,14 @@ class TuyaBLENumber(TuyaBLEEntity):
         self._attr_native_unit_of_measurement = mapping.description.native_unit_of_measurement
         self._attr_entity_category = mapping.description.entity_category
 
+    @property
+    def min_value(self) -> float:
+        return self._attr_native_min_value
+
+    @property
+    def max_value(self) -> float:
+        return self._attr_native_max_value
+    
     @property
     def native_value(self) -> float | None:
         if self._mapping.getter is not None:
