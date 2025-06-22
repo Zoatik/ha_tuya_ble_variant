@@ -41,6 +41,7 @@ class TuyaBLEBinarySensorMapping:
     force_add: bool = True
     dp_type: TuyaBLEDataPointType | None = None
     getter: Callable[[TuyaBLEBinarySensor], None] | None = None
+    bit: int | None = None
     #coefficient: float = 1.0
     #icons: list[str] | None = None
     is_available: TuyaBLEBinarySensorIsAvailable = None
@@ -70,6 +71,60 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
     ),
     "ms": TuyaBLECategoryBinarySensorMapping(
         products={},
+    ),
+    "sfkzq": TuyaBLECategoryBinarySensorMapping(
+        products={
+            "ldcdnigc": [
+                TuyaBLEBinarySensorMapping(
+                    dp_id=4,
+                    description=BinarySensorEntityDescription(
+                        key="low_battery",
+                        device_class=BinarySensorDeviceClass.BATTERY,
+                    ),
+                    bit=0,
+                ),
+                TuyaBLEBinarySensorMapping(
+                    dp_id=4,
+                    description=BinarySensorEntityDescription(
+                        key="fault",
+                        device_class=BinarySensorDeviceClass.PROBLEM,
+                    ),
+                    bit=1,
+                ),
+                TuyaBLEBinarySensorMapping(
+                    dp_id=4,
+                    description=BinarySensorEntityDescription(
+                        key="lack_water",
+                        icon="mdi:water-off",
+                    ),
+                    bit=2,
+                ),
+                TuyaBLEBinarySensorMapping(
+                    dp_id=4,
+                    description=BinarySensorEntityDescription(
+                        key="sensor_fault",
+                        device_class=BinarySensorDeviceClass.PROBLEM,
+                    ),
+                    bit=3,
+                ),
+                TuyaBLEBinarySensorMapping(
+                    dp_id=4,
+                    description=BinarySensorEntityDescription(
+                        key="motor_fault",
+                        device_class=BinarySensorDeviceClass.PROBLEM,
+                    ),
+                    bit=4,
+                ),
+                TuyaBLEBinarySensorMapping(
+                    dp_id=4,
+                    description=BinarySensorEntityDescription(
+                        key="low_temp",
+                        device_class=BinarySensorDeviceClass.COLD,
+                    ),
+                    bit=5,
+                ),
+            ],
+        },
     ),
 }
 
@@ -117,7 +172,11 @@ class TuyaBLEBinarySensor(RestoreEntity, TuyaBLEEntity, BinarySensorEntity):
         else:
             datapoint = self._device.datapoints[self._mapping.dp_id]
             if datapoint is not None and getattr(datapoint, "value", None) is not None:
-                self._attr_is_on = bool(datapoint.value)
+                if self._mapping.bit is not None:
+                    # Mandatory for bitwise sensors (like ZX-7378 that has 6 bits in one datapoint)
+                    self._attr_is_on = bool((datapoint.value >> self._mapping.bit) & 1)
+                else:
+                    self._attr_is_on = bool(datapoint.value)
         self.async_write_ha_state()
 
 

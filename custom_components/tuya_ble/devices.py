@@ -329,6 +329,16 @@ class TuyaBLECategoryInfo:
 
 
 devices_database: dict[str, TuyaBLECategoryInfo] = {
+    "sfkzq": TuyaBLECategoryInfo(
+        products={
+            "nxquc5lb": TuyaBLEProductInfo(  # device product_id
+                name="Smart Water Valve",
+            ),
+            "ldcdnigc": TuyaBLEProductInfo(
+                name="ZX-7378 Smart Irrigation Controller",
+            ),
+        },
+    ),
     "co2bj": TuyaBLECategoryInfo(
         products={
             "59s19z5m": TuyaBLEProductInfo(  # device product_id

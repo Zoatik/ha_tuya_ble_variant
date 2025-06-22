@@ -216,6 +216,24 @@ class TuyaBLECategoryNumberMapping:
 
 
 mapping: dict[str, TuyaBLECategoryNumberMapping] = {
+    "sfkzq": TuyaBLECategoryNumberMapping( # Smart valve
+        products={
+            "ldcdnigc": [   # ZX-7378 Smart Irrigation Controller
+                TuyaBLENumberMapping(
+                    dp_id=5,
+                    description=NumberEntityDescription(
+                        key="countdown",
+                        icon="mdi:timer",
+                        native_max_value=86400,
+                        native_min_value=0,
+                        native_unit_of_measurement="s",
+                        native_step=1,
+                        entity_category=EntityCategory.CONFIG,
+                    ),
+                ),
+            ],
+        },
+    ),
     "co2bj": TuyaBLECategoryNumberMapping(
         products={
             "59s19z5m": [  # CO2 Detector

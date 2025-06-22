@@ -101,6 +101,43 @@ class TuyaBLECategorySensorMapping:
     products: dict[str, list[TuyaBLESensorMapping|TuyaBLELastUnlockSensorMapping]] | None = None
     mapping: list[TuyaBLESensorMapping|TuyaBLELastUnlockSensor] | None = None
 mapping: dict[str, TuyaBLECategorySensorMapping] = {
+    "sfkzq": TuyaBLECategorySensorMapping(
+        products={
+            "nxquc5lb":  # Smart Water Valve
+            [
+                TuyaBLESensorMapping(
+                    dp_id=7,
+                    description=SensorEntityDescription(
+                        key="battery_percentage",
+                        device_class=SensorDeviceClass.BATTERY,
+                        native_unit_of_measurement=PERCENTAGE,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                        state_class=SensorStateClass.MEASUREMENT,
+                    ),
+                ),   
+            ],
+            "ldcdnigc": [   # ZX-7378 Smart Irrigation Controller
+                TuyaBLESensorMapping(
+                    dp_id=2,
+                    description=SensorEntityDescription(
+                        key="battery_percentage",
+                        device_class=SensorDeviceClass.BATTERY,
+                        native_unit_of_measurement=PERCENTAGE,
+                        state_class=SensorStateClass.MEASUREMENT,
+                    ),
+                ),
+                TuyaBLESensorMapping(
+                    dp_id=6,
+                    description=SensorEntityDescription(
+                        key="use_time_one",
+                        icon="mdi:timer",
+                        native_unit_of_measurement="s",
+                        state_class=SensorStateClass.MEASUREMENT,
+                    ),
+                ),
+            ],
+        }
+    ),
     "co2bj": TuyaBLECategorySensorMapping(
         products={
             "59s19z5m": [  # CO2 Detector
