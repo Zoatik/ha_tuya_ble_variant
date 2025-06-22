@@ -220,7 +220,7 @@ mapping: dict[str, TuyaBLECategoryNumberMapping] = {
         products={
             "ldcdnigc": [   # ZX-7378 Smart Irrigation Controller
                 TuyaBLENumberMapping(
-                    dp_id=5,
+                    dp_id=11,
                     description=NumberEntityDescription(
                         key="countdown",
                         icon="mdi:timer",
