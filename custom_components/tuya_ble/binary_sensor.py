@@ -198,7 +198,7 @@ class TuyaBLEBinarySensor(RestoreEntity, TuyaBLEEntity, BinarySensorEntity):
                 if isinstance(value, bytes):
                     value = value[0]
                 self._attr_is_on = bool((value >> self._mapping.bit) & 1)
-            else:
+            elif datapoint is not None and datapoint.value is not None:
                 self._attr_is_on = bool(datapoint.value)
         self.async_write_ha_state()
 
