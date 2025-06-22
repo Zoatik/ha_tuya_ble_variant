@@ -193,7 +193,7 @@ class TuyaBLEBinarySensor(RestoreEntity, TuyaBLEEntity, BinarySensorEntity):
             self._mapping.getter(self)
         else:
             datapoint = self._device.datapoints[self._mapping.dp_id]
-            if datapoint is not None and getattr(datapoint, "value", None) is not None:
+            if datapoint is not None and getattr(datapoint, "value", None) is not None and self._mapping.bit is not None:
                 value = datapoint.value
                 if isinstance(value, bytes):
                     value = value[0]
