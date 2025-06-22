@@ -96,6 +96,85 @@ def set_fingerbot_program_repeat_forever(
             )
             self._hass.create_task(datapoint.set_value(new_value))
 
+# --- ZX-7378 custom functions + getter/setter ---
+
+def build_timer_raw(
+    hour: int,
+    minute: int,
+    duration_minutes: int,
+    days: list[str],
+    enabled: bool
+) -> bytes:
+    day_bits = {
+        "sun": 0x01, "mon": 0x02, "tue": 0x04, "wed": 0x08,
+        "thu": 0x10, "fri": 0x20, "sat": 0x40,
+    }
+    mask = 0
+    for day in days:
+        mask |= day_bits[day.lower()[:3]]
+    total_minutes = hour * 60 + minute
+    hhmm = total_minutes.to_bytes(2, "big")
+    dddd = duration_minutes.to_bytes(2, "big")
+    raw = bytearray()
+    raw.append(0x01)
+    raw.append(0x01)
+    raw.extend(hhmm)
+    raw.extend(dddd)
+    raw.append(mask)
+    raw.append(0x64)
+    raw.append(0x01 if enabled else 0x00)
+    raw.append(0x07)
+    raw.extend(b"\xE9\x06")
+    raw.append(0x14)
+    raw.append(0x01)
+    return bytes(raw)
+
+def parse_timer_raw(raw: bytes):
+    if len(raw) < 14:
+        return None
+    total_minutes = int.from_bytes(raw[2:4], "big")
+    hour = total_minutes // 60
+    minute = total_minutes % 60
+    duration = int.from_bytes(raw[4:6], "big")
+    mask = raw[6]
+    enabled = raw[8] == 0x01
+    # Décodage des jours
+    days = []
+    day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+    for i, name in enumerate(day_names):
+        if mask & (1 << i):
+            days.append(name)
+    return {
+        "hour": hour,
+        "minute": minute,
+        "duration": duration,
+        "days": days,
+        "enabled": enabled,
+    }
+
+def timer_switch_getter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo) -> bool | None:
+    datapoint = self._device.datapoints[17]  # dp_id=17
+    if datapoint and isinstance(datapoint.value, bytes):
+        parsed = parse_timer_raw(datapoint.value)
+        if parsed:
+            return parsed["enabled"]
+    return None
+
+def timer_switch_setter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo, value: bool) -> None:
+    datapoint = self._device.datapoints[17]
+    if datapoint and isinstance(datapoint.value, bytes):
+        parsed = parse_timer_raw(datapoint.value)
+        if parsed:
+            # On garde la config existante, on ne change que enabled
+            raw = build_timer_raw(
+                hour=parsed["hour"],
+                minute=parsed["minute"],
+                duration_minutes=parsed["duration"],
+                days=parsed["days"],
+                enabled=value
+            )
+            self._hass.create_task(datapoint.set_value(raw))
+
 # --- Кастомные getter/setter для замка ---
 def lock_switch_setter(self: TuyaBLESwitch, product: TuyaBLEProductInfo, value: bool) -> None:
     if value:
@@ -150,13 +229,24 @@ mapping: dict[str, TuyaBLECategorySwitchMapping] = {
                     ),
                 ),
             ],
-            "ldcdnigc": [   # ZX-7378 Smart Irrigation Controller
+            "ldcdnigc": [
                 TuyaBLESwitchMapping(
                     dp_id=1,
                     description=SwitchEntityDescription(
                         key="switch",
                         icon="mdi:valve",
                     ),
+                ),
+                TuyaBLESwitchMapping(
+                    dp_id=17,
+                    description=SwitchEntityDescription(
+                        key="timer_program",
+                        icon="mdi:timer-cog",
+                        entity_category=EntityCategory.CONFIG,
+                    ),
+                    getter=timer_switch_getter,
+                    setter=timer_switch_setter,
+                    dp_type=TuyaBLEDataPointType.DT_RAW,
                 ),
             ],
         }
