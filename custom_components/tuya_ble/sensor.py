@@ -118,24 +118,16 @@ mapping: dict[str, TuyaBLECategorySensorMapping] = {
             ],
             "ldcdnigc": [   # ZX-7378 Smart Irrigation Controller
                 TuyaBLESensorMapping(
-                    dp_id=12,
+                    dp_id=2,
                     description=SensorEntityDescription(
-                        key="work_state",
-                        options=["auto", "manual", "idle"],
-                        entity_category=EntityCategory.DIAGNOSTIC,
+                        key="battery_percentage",
+                        device_class=SensorDeviceClass.BATTERY,
+                        native_unit_of_measurement=PERCENTAGE,
+                        state_class=SensorStateClass.MEASUREMENT,
                     ),
                 ),
                 TuyaBLESensorMapping(
-                    dp_id=8,
-                    description=SensorEntityDescription(
-                        key="battery_state",
-                        options=["low", "middle", "high"],
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    ),
-                ),
-                TuyaBLEBatteryMapping(dp_id=7),
-                TuyaBLESensorMapping(
-                    dp_id=15,
+                    dp_id=6,
                     description=SensorEntityDescription(
                         key="use_time_one",
                         icon="mdi:timer",
