@@ -75,8 +75,19 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
     "sfkzq": TuyaBLECategoryBinarySensorMapping(
         products={
             "ldcdnigc": [
+
+                TuyaBLEBinarySensorMapping(
+                    dp_id=1,
+                    dp_type=TuyaBLEDataPointType.DT_BOOL,
+                    description=BinarySensorEntityDescription(
+                        key="switch",
+                        name="switch status",
+                        device_class=BinarySensorDeviceClass.DIAGNOSTIC,
+                    ),
+                ),
                 TuyaBLEBinarySensorMapping(
                     dp_id=4,
+                    dp_type=TuyaBLEDataPointType.DT_BITMAP,
                     description=BinarySensorEntityDescription(
                         key="low_battery",
                         name="Low Battery",
@@ -86,6 +97,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                 ),
                 TuyaBLEBinarySensorMapping(
                     dp_id=4,
+                    dp_type=TuyaBLEDataPointType.DT_BITMAP,
                     description=BinarySensorEntityDescription(
                         key="fault",
                         name="Fault",
@@ -95,6 +107,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                 ),
                 TuyaBLEBinarySensorMapping(
                     dp_id=4,
+                    dp_type=TuyaBLEDataPointType.DT_BITMAP,
                     description=BinarySensorEntityDescription(
                         key="lack_water",
                         name="Lack of Water",
@@ -104,6 +117,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                 ),
                 TuyaBLEBinarySensorMapping(
                     dp_id=4,
+                    dp_type=TuyaBLEDataPointType.DT_BITMAP,
                     description=BinarySensorEntityDescription(
                         key="sensor_fault",
                         name="Sensor Fault",
@@ -113,6 +127,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                 ),
                 TuyaBLEBinarySensorMapping(
                     dp_id=4,
+                    dp_type=TuyaBLEDataPointType.DT_BITMAP,
                     description=BinarySensorEntityDescription(
                         key="motor_fault",
                         name="Motor Fault",
@@ -122,6 +137,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                 ),
                 TuyaBLEBinarySensorMapping(
                     dp_id=4,
+                    dp_type=TuyaBLEDataPointType.DT_BITMAP,
                     description=BinarySensorEntityDescription(
                         key="low_temp",
                         name="Low Temperature",
@@ -178,11 +194,12 @@ class TuyaBLEBinarySensor(RestoreEntity, TuyaBLEEntity, BinarySensorEntity):
         else:
             datapoint = self._device.datapoints[self._mapping.dp_id]
             if datapoint is not None and getattr(datapoint, "value", None) is not None:
-                if self._mapping.bit is not None:
-                    # Mandatory for bitwise sensors (like ZX-7378 that has 6 bits in one datapoint)
-                    self._attr_is_on = bool((datapoint.value >> self._mapping.bit) & 1)
-                else:
-                    self._attr_is_on = bool(datapoint.value)
+                value = datapoint.value
+                if isinstance(value, bytes):
+                    value = value[0]
+                self._attr_is_on = bool((value >> self._mapping.bit) & 1)
+            else:
+                self._attr_is_on = bool(datapoint.value)
         self.async_write_ha_state()
 
 
