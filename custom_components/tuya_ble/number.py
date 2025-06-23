@@ -10,6 +10,10 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
+
+from custom_components.tuya_ble.timer_utils import build_timer_raw, parse_timer_raw, set_timer_param, set_timer_day
+
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -46,6 +50,8 @@ TuyaBLENumberSetter = (
 )
 
 
+
+
 @dataclass
 class TuyaBLENumberMapping:
     dp_id: int
@@ -57,6 +63,68 @@ class TuyaBLENumberMapping:
     getter: TuyaBLENumberGetter = None
     setter: TuyaBLENumberSetter = None
     mode: NumberMode = NumberMode.BOX
+
+
+# -- 
+def make_timer_param_getter(param: str):
+    def getter(self, product):
+        datapoint = self._device.datapoints[17]
+        if datapoint and isinstance(datapoint.value, bytes):
+            parsed = parse_timer_raw(datapoint.value)
+            if parsed and param in parsed:
+                return parsed[param]
+        return None
+    return getter
+
+def make_timer_param_setter(param: str):
+    def setter(self, product, value):
+        set_timer_param(self, param, value)
+    return setter
+
+ldcdnigc_timer_numbers = [
+    TuyaBLENumberMapping(
+        dp_id=17,
+        description=NumberEntityDescription(
+            key="timer_hour",
+            name="Timer Hour",
+            icon="mdi:clock-outline",
+            native_min_value=0,
+            native_max_value=23,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        getter=make_timer_param_getter("hour"),
+        setter=make_timer_param_setter("hour"),
+        dp_type=TuyaBLEDataPointType.DT_RAW,
+    ),
+    TuyaBLENumberMapping(
+        dp_id=17,
+        description=NumberEntityDescription(
+            key="timer_minute",
+            name="Timer Minute",
+            icon="mdi:clock-outline",
+            native_min_value=0,
+            native_max_value=59,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        getter=make_timer_param_getter("minute"),
+        setter=make_timer_param_setter("minute"),
+        dp_type=TuyaBLEDataPointType.DT_RAW,
+    ),
+    TuyaBLENumberMapping(
+        dp_id=17,
+        description=NumberEntityDescription(
+            key="timer_duration",
+            name="Timer Duration",
+            icon="mdi:timer-outline",
+            native_min_value=1,
+            native_max_value=1439,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        getter=make_timer_param_getter("duration"),
+        setter=make_timer_param_setter("duration"),
+        dp_type=TuyaBLEDataPointType.DT_RAW,
+    ),
+]
 
 
 def is_fingerbot_in_program_mode(
@@ -232,6 +300,7 @@ mapping: dict[str, TuyaBLECategoryNumberMapping] = {
                         entity_category=EntityCategory.CONFIG,
                     ),
                 ),
+                *ldcdnigc_timer_numbers,
             ],
         },
     ),
@@ -570,11 +639,11 @@ class TuyaBLENumber(TuyaBLEEntity, NumberEntity):
 
     @property
     def min_value(self) -> float:
-        return self._attr_native_min_value
+        return self._attr_native_min_value if self._attr_native_min_value is not None else 0.0
 
     @property
     def max_value(self) -> float:
-        return self._attr_native_max_value
+        return self._attr_native_max_value if self._attr_native_max_value is not None else 0.0
     
     @property
     def native_value(self) -> float | None:
@@ -598,8 +667,6 @@ class TuyaBLENumber(TuyaBLEEntity, NumberEntity):
         if datapoint:
             await datapoint.set_value(int_value)
 
-    # Свойство available не определяется, используется только базовое
-    # ...existing code...
 
 
 async def async_setup_entry(

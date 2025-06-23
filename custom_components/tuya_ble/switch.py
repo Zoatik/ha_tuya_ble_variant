@@ -10,6 +10,9 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
     SwitchEntity,
 )
+
+from custom_components.tuya_ble.timer_utils import build_timer_raw, parse_timer_raw, set_timer_param, set_timer_day
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -98,59 +101,6 @@ def set_fingerbot_program_repeat_forever(
 
 # --- ZX-7378 custom functions + getter/setter ---
 
-def build_timer_raw(
-    hour: int,
-    minute: int,
-    duration_minutes: int,
-    days: list[str],
-    enabled: bool
-) -> bytes:
-    day_bits = {
-        "sun": 0x01, "mon": 0x02, "tue": 0x04, "wed": 0x08,
-        "thu": 0x10, "fri": 0x20, "sat": 0x40,
-    }
-    mask = 0
-    for day in days:
-        mask |= day_bits[day.lower()[:3]]
-    total_minutes = hour * 60 + minute
-    hhmm = total_minutes.to_bytes(2, "big")
-    dddd = duration_minutes.to_bytes(2, "big")
-    raw = bytearray()
-    raw.append(0x01)
-    raw.append(0x01)
-    raw.extend(hhmm)
-    raw.extend(dddd)
-    raw.append(mask)
-    raw.append(0x64)
-    raw.append(0x01 if enabled else 0x00)
-    raw.append(0x07)
-    raw.extend(b"\xE9\x06")
-    raw.append(0x14)
-    raw.append(0x01)
-    return bytes(raw)
-
-def parse_timer_raw(raw: bytes):
-    if len(raw) < 14:
-        return None
-    total_minutes = int.from_bytes(raw[2:4], "big")
-    hour = total_minutes // 60
-    minute = total_minutes % 60
-    duration = int.from_bytes(raw[4:6], "big")
-    mask = raw[6]
-    enabled = raw[8] == 0x01
-    # Décodage des jours
-    days = []
-    day_names = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
-    for i, name in enumerate(day_names):
-        if mask & (1 << i):
-            days.append(name)
-    return {
-        "hour": hour,
-        "minute": minute,
-        "duration": duration,
-        "days": days,
-        "enabled": enabled,
-    }
 
 def timer_switch_getter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo) -> bool | None:
     datapoint = self._device.datapoints[17]  # dp_id=17
@@ -217,11 +167,37 @@ class TuyaBLECategorySwitchMapping:
     mapping: list[TuyaBLESwitchMapping] | None = None
 
 
+# Precompute the list of timer switches for ldcdnigc
+def make_timer_day_getter(day: str):
+    def getter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo) -> bool | None:
+        datapoint = self._device.datapoints[17]
+        if datapoint and isinstance(datapoint.value, bytes):
+            parsed = parse_timer_raw(datapoint.value)
+            if parsed and "days" in parsed:
+                return day in parsed["days"]
+        return None
+    return getter
+
+ldcdnigc_timer_switches = [
+    TuyaBLESwitchMapping(
+        dp_id=17,
+        description=SwitchEntityDescription(
+            key=f"timer_{day}",
+            name=f"Timer {day.capitalize()}",
+            icon="mdi:calendar",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        getter=make_timer_day_getter(day),
+        setter=lambda self, product, value, d=day: set_timer_day(self, d, value),
+        dp_type=TuyaBLEDataPointType.DT_RAW,
+    )
+    for day in ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+]
+
 mapping: dict[str, TuyaBLECategorySwitchMapping] = {
     "sfkzq": TuyaBLECategorySwitchMapping(
         products={
-            "nxquc5lb":  # Smart Water Valve
-            [
+            "nxquc5lb": [
                 TuyaBLESwitchMapping(
                     dp_id=1,
                     description=SwitchEntityDescription(
@@ -237,17 +213,7 @@ mapping: dict[str, TuyaBLECategorySwitchMapping] = {
                         icon="mdi:valve",
                     ),
                 ),
-                TuyaBLESwitchMapping(
-                    dp_id=17,
-                    description=SwitchEntityDescription(
-                        key="timer_program",
-                        icon="mdi:timer-cog",
-                        entity_category=EntityCategory.CONFIG,
-                    ),
-                    getter=timer_switch_getter,
-                    setter=timer_switch_setter,
-                    dp_type=TuyaBLEDataPointType.DT_RAW,
-                ),
+                *ldcdnigc_timer_switches,
             ],
         }
     ),
@@ -483,7 +449,9 @@ mapping: dict[str, TuyaBLECategorySwitchMapping] = {
 }
 
 
-def get_mapping_by_device(device: TuyaBLEDevice) -> list[TuyaBLECategorySwitchMapping]:
+from collections.abc import Sequence
+
+def get_mapping_by_device(device: TuyaBLEDevice) -> Sequence[TuyaBLESwitchMapping]:
     category = mapping.get(device.category)
     if category is not None and category.products is not None:
         product_mapping = category.products.get(device.product_id)
@@ -515,8 +483,9 @@ class TuyaBLESwitch(TuyaBLEEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if switch is on."""
 
-        if self._mapping.getter:
-            return self._mapping.getter(self, self._product)
+        if self._mapping.getter is not None:
+            result = self._mapping.getter(self, self._product)
+            return bool(result) if result is not None else False
 
         datapoint = self._device.datapoints[self._mapping.dp_id]
         if datapoint:
@@ -525,7 +494,7 @@ class TuyaBLESwitch(TuyaBLEEntity, SwitchEntity):
                 in [TuyaBLEDataPointType.DT_RAW, TuyaBLEDataPointType.DT_BITMAP]
                 and self._mapping.bitmap_mask
             ):
-                bitmap_value = bytes(datapoint.value)
+                bitmap_value = datapoint.value if isinstance(datapoint.value, bytes) else bytes()
                 bitmap_mask = self._mapping.bitmap_mask
                 for v, m in zip(bitmap_value, bitmap_mask, strict=True):
                     if (v & m) != 0:
@@ -547,7 +516,7 @@ class TuyaBLESwitch(TuyaBLEEntity, SwitchEntity):
                 self._mapping.bitmap_mask,
             )
             bitmap_mask = self._mapping.bitmap_mask
-            bitmap_value = bytes(datapoint.value)
+            bitmap_value = datapoint.value if isinstance(datapoint.value, bytes) else bytes()
             new_value = bytes(
                 v | m for (v, m) in zip(bitmap_value, bitmap_mask, strict=True)
             )
@@ -574,7 +543,7 @@ class TuyaBLESwitch(TuyaBLEEntity, SwitchEntity):
                 self._mapping.bitmap_mask,
             )
             bitmap_mask = self._mapping.bitmap_mask
-            bitmap_value = bytes(datapoint.value)
+            bitmap_value = datapoint.value if isinstance(datapoint.value, bytes) else bytes()
             new_value = bytes(
                 v & ~m for (v, m) in zip(bitmap_value, bitmap_mask, strict=True)
             )
