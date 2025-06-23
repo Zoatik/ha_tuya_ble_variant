@@ -153,7 +153,6 @@ mapping: dict[str, TuyaBLECategoryTextMapping] = {
                         name="Timer RAW (base64)",
                         entity_category=EntityCategory.CONFIG,
                         mode="text",
-                        max_length=64,
                     ),
                     getter=lambda self, product: (
                         base64.b64encode(self._device.datapoints[17].value).decode()
