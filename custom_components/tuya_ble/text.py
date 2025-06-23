@@ -1,11 +1,12 @@
 """The Tuya BLE integration."""
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 
 import logging
 from struct import pack, unpack
-from typing import Callable
+from typing import Callable, Optional
 
 from homeassistant.components.text import (
     TextEntity,
@@ -103,16 +104,16 @@ class TuyaBLETextMapping:
     description: TextEntityDescription
     force_add: bool = True
     dp_type: TuyaBLEDataPointType | None = None
-    default_value: str | None = None
-    is_available: TuyaBLETextIsAvailable = None
-    getter: Callable[[TuyaBLEText], None] | None = None
-    setter: Callable[[TuyaBLEText], None] | None = None
+    default_value: Optional[str] = None
+    is_available: Optional[TuyaBLETextIsAvailable] = None
+    getter: Optional[TuyaBLETextGetter] = None
+    setter: Optional[TuyaBLETextSetter] = None
 
 
 @dataclass
 class TuyaBLECategoryTextMapping:
-    products: dict[str, list[TuyaBLETextMapping]] | None = None
-    mapping: list[TuyaBLETextMapping] | None = None
+    products: Optional[dict[str, list[TuyaBLETextMapping]]] = None
+    mapping: Optional[list[TuyaBLETextMapping]] = None
 
 
 mapping: dict[str, TuyaBLECategoryTextMapping] = {
@@ -140,6 +141,33 @@ mapping: dict[str, TuyaBLECategoryTextMapping] = {
                     ),
                 ]
             ),
+        },
+    ),
+    "sfkzq": TuyaBLECategoryTextMapping(
+        products={
+            "ldcdnigc": [
+                TuyaBLETextMapping(
+                    dp_id=17,
+                    description=TextEntityDescription(
+                        key="timer_raw",
+                        name="Timer RAW (base64)",
+                        entity_category=EntityCategory.CONFIG,
+                        mode="text",
+                        max_length=64,
+                    ),
+                    getter=lambda self, product: (
+                        base64.b64encode(self._device.datapoints[17].value).decode()
+                        if (
+                            self._device.datapoints[17] is not None
+                            and isinstance(self._device.datapoints[17].value, bytes)
+                        ) else ""
+                    ),
+                    setter=lambda self, product, value: self._hass.create_task(
+                        self._device.datapoints[17].set_value(base64.b64decode(value))
+                    ),
+                    dp_type=TuyaBLEDataPointType.DT_RAW,
+                ),
+            ],
         },
     ),
 }
