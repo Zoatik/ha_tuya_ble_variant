@@ -1,3 +1,8 @@
+import base64
+import logging
+_LOGGER = logging.getLogger(__name__)
+
+
 def build_timer_raw(
     hour: int,
     minute: int,
@@ -15,9 +20,9 @@ def build_timer_raw(
     mask = 0
     for day in days:
         mask |= day_bits[day.lower()[:3]]
-    total_minutes = hour * 60 + minute
-    hhmm = total_minutes.to_bytes(2, "big")
-    dddd = duration_minutes.to_bytes(2, "big")
+    total_minutes = int(hour) * 60 + int(minute)
+    hhmm = int(total_minutes).to_bytes(2, "big")
+    dddd = int(duration_minutes).to_bytes(2, "big")
     raw = bytearray()
     raw.append(0x01)
     raw.append(0x01)
@@ -30,12 +35,14 @@ def build_timer_raw(
     raw.extend(b"\xE9\x06")
     raw.append(0x14)
     raw.append(0x01)
+    _LOGGER.info(f"[Tuya Timer] RAW envoyé: {base64.b64encode(raw).decode()} (hex: {raw.hex()})")
     return bytes(raw)
 
 def parse_timer_raw(raw: bytes):
     """
     Décode la séquence RAW du timer.
     """
+    _LOGGER.info(f"[Tuya Timer] RAW reçu: {base64.b64encode(raw).decode()} (hex: {raw.hex()})")
     if not raw or len(raw) < 14:
         return None
     total_minutes = int.from_bytes(raw[2:4], "big")
@@ -65,7 +72,7 @@ def set_timer_param(self, param: str, value: int):
     if datapoint and isinstance(datapoint.value, bytes):
         parsed = parse_timer_raw(datapoint.value)
         if parsed is not None:
-            parsed[param] = value
+            parsed[param] = int(value)
             raw = build_timer_raw(
                 hour=parsed["hour"],
                 minute=parsed["minute"],
@@ -73,6 +80,7 @@ def set_timer_param(self, param: str, value: int):
                 days=parsed["days"],
                 enabled=parsed["enabled"]
             )
+            _LOGGER.info(f"[Tuya Timer] set_timer_param: {param}={value}, RAW envoyé: {base64.b64encode(raw).decode()}")
             self._hass.create_task(datapoint.set_value(raw))
 
 def set_timer_day(self, day: str, value: bool):
@@ -95,4 +103,5 @@ def set_timer_day(self, day: str, value: bool):
                 days=list(days),
                 enabled=parsed["enabled"]
             )
+            _LOGGER.info(f"[Tuya Timer] set_timer_day: {day}={value}, RAW envoyé: {base64.b64encode(raw).decode()}")
             self._hass.create_task(datapoint.set_value(raw))
