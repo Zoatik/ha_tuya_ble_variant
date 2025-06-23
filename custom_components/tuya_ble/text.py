@@ -116,6 +116,18 @@ class TuyaBLECategoryTextMapping:
     mapping: Optional[list[TuyaBLETextMapping]] = None
 
 
+# debug timer raw input / setter
+
+def set_timer_raw(self, product, value):
+    decoded = base64.b64decode(value)
+    datapoint = self._device.datapoints.get_or_create(
+        17,
+        TuyaBLEDataPointType.DT_RAW,
+        decoded
+    )
+    if datapoint is not None:
+        self._hass.create_task(datapoint.set_value(decoded))
+
 mapping: dict[str, TuyaBLECategoryTextMapping] = {
     "szjqr": TuyaBLECategoryTextMapping(
         products={
@@ -161,9 +173,7 @@ mapping: dict[str, TuyaBLECategoryTextMapping] = {
                             and isinstance(self._device.datapoints[17].value, bytes)
                         ) else ""
                     ),
-                    setter=lambda self, product, value: self._hass.create_task(
-                        self._device.datapoints[17].set_value(base64.b64decode(value))
-                    ),
+                    setter=set_timer_raw
                     dp_type=TuyaBLEDataPointType.DT_RAW,
                 ),
             ],
