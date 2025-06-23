@@ -173,7 +173,7 @@ mapping: dict[str, TuyaBLECategoryTextMapping] = {
                             and isinstance(self._device.datapoints[17].value, bytes)
                         ) else ""
                     ),
-                    setter=set_timer_raw
+                    setter=set_timer_raw,
                     dp_type=TuyaBLEDataPointType.DT_RAW,
                 ),
             ],
