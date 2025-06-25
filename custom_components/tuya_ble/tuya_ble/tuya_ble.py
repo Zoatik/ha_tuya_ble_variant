@@ -1101,6 +1101,14 @@ class TuyaBLEDevice:
                 timestamp = int(time.time_ns() / 1000000)
                 timezone = -int(time.timezone / 36)
                 data = str(timestamp).encode() + pack(">h", timezone)
+                _LOGGER.info(
+                    "%s: [TIME1_REQ] Device requested time (timestamp ms): %s, timezone: %d",
+                    self.address, timestamp, timezone
+                )
+                _LOGGER.info(
+                    "%s: [TIME1_REQ] Sending data: %s",
+                    self.address, data.hex()
+                )
                 asyncio.create_task(self._send_response(code, data, seq_num))
 
             case TuyaBLECode.FUN_RECEIVE_TIME2_REQ:
@@ -1119,6 +1127,17 @@ class TuyaBLEDevice:
                     time_str.tm_sec,
                     time_str.tm_wday,
                     timezone,
+                )
+                _LOGGER.info(
+                    "%s: [TIME2_REQ] Device requested time (Y/M/D H:M:S W): %02d/%02d/%02d %02d:%02d:%02d (weekday=%d), timezone: %d",
+                    self.address,
+                    time_str.tm_year % 100, time_str.tm_mon, time_str.tm_mday,
+                    time_str.tm_hour, time_str.tm_min, time_str.tm_sec,
+                    time_str.tm_wday, timezone
+                )
+                _LOGGER.info(
+                    "%s: [TIME2_REQ] Sending data: %s",
+                    self.address, data.hex()
                 )
                 asyncio.create_task(self._send_response(code, data, seq_num))
 
