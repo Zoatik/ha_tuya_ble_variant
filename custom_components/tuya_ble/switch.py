@@ -11,7 +11,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 
-from custom_components.tuya_ble.timer_utils import build_timer_raw, parse_timer_raw, set_timer_param, set_timer_day
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -99,31 +98,6 @@ def set_fingerbot_program_repeat_forever(
             )
             self._hass.create_task(datapoint.set_value(new_value))
 
-# --- ZX-7378 custom functions + getter/setter ---
-
-
-def timer_switch_getter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo) -> bool | None:
-    datapoint = self._device.datapoints[17]  # dp_id=17
-    if datapoint and isinstance(datapoint.value, bytes):
-        parsed = parse_timer_raw(datapoint.value)
-        if parsed:
-            return parsed["enabled"]
-    return None
-
-def timer_switch_setter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo, value: bool) -> None:
-    datapoint = self._device.datapoints[17]
-    if datapoint and isinstance(datapoint.value, bytes):
-        parsed = parse_timer_raw(datapoint.value)
-        if parsed:
-            # On garde la config existante, on ne change que enabled
-            raw = build_timer_raw(
-                hour=parsed["hour"],
-                minute=parsed["minute"],
-                duration_minutes=parsed["duration"],
-                days=parsed["days"],
-                enabled=value
-            )
-            self._hass.create_task(datapoint.set_value(raw))
 
 # --- Кастомные getter/setter для замка ---
 def lock_switch_setter(self: TuyaBLESwitch, product: TuyaBLEProductInfo, value: bool) -> None:
@@ -167,32 +141,6 @@ class TuyaBLECategorySwitchMapping:
     mapping: list[TuyaBLESwitchMapping] | None = None
 
 
-# Precompute the list of timer switches for ldcdnigc
-def make_timer_day_getter(day: str):
-    def getter(self: "TuyaBLESwitch", product: TuyaBLEProductInfo) -> bool | None:
-        datapoint = self._device.datapoints[17]
-        if datapoint and isinstance(datapoint.value, bytes):
-            parsed = parse_timer_raw(datapoint.value)
-            if parsed and "days" in parsed:
-                return day in parsed["days"]
-        return None
-    return getter
-
-ldcdnigc_timer_switches = [
-    TuyaBLESwitchMapping(
-        dp_id=17,
-        description=SwitchEntityDescription(
-            key=f"timer_{day}",
-            name=f"Timer {day.capitalize()}",
-            icon="mdi:calendar",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        getter=make_timer_day_getter(day),
-        setter=lambda self, product, value, d=day: set_timer_day(self, d, value),
-        dp_type=TuyaBLEDataPointType.DT_RAW,
-    )
-    for day in ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
-]
 
 mapping: dict[str, TuyaBLECategorySwitchMapping] = {
     "sfkzq": TuyaBLECategorySwitchMapping(
@@ -209,11 +157,10 @@ mapping: dict[str, TuyaBLECategorySwitchMapping] = {
                 TuyaBLESwitchMapping(
                     dp_id=1,
                     description=SwitchEntityDescription(
-                        key="switch",
+                        key="water_valve",
                         icon="mdi:valve",
                     ),
                 ),
-                *ldcdnigc_timer_switches,
             ],
         }
     ),
