@@ -55,7 +55,7 @@ class Country:
 
     name: str
     country_code: str
-    endpoint: str = TuyaCloudOpenAPIEndpoint.AMERICA
+    endpoint: str = TuyaCloudOpenAPIEndpoint.EUROPE
 
 
 # https://developer.tuya.com/en/docs/iot/oem-app-data-center-distributed?id=Kafi0ku9l07qb

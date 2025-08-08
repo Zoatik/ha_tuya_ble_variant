@@ -3,7 +3,7 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
-def build_timer_raw(
+'''def build_timer_raw(
     hour: int,
     minute: int,
     duration_minutes: int,
@@ -104,4 +104,4 @@ def set_timer_day(self, day: str, value: bool):
                 enabled=parsed["enabled"]
             )
             _LOGGER.info(f"[Tuya Timer] set_timer_day: {day}={value}, RAW envoyé: {base64.b64encode(raw).decode()}")
-            self._hass.create_task(datapoint.set_value(raw))
+            self._hass.create_task(datapoint.set_value(raw))'''

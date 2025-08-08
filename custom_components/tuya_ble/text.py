@@ -155,30 +155,6 @@ mapping: dict[str, TuyaBLECategoryTextMapping] = {
             ),
         },
     ),
-    "sfkzq": TuyaBLECategoryTextMapping(
-        products={
-            "ldcdnigc": [
-                TuyaBLETextMapping(
-                    dp_id=17,
-                    description=TextEntityDescription(
-                        key="timer_raw",
-                        name="Timer RAW (base64)",
-                        entity_category=EntityCategory.CONFIG,
-                        mode="text",
-                    ),
-                    getter=lambda self, product: (
-                        base64.b64encode(self._device.datapoints[17].value).decode()
-                        if (
-                            self._device.datapoints[17] is not None
-                            and isinstance(self._device.datapoints[17].value, bytes)
-                        ) else ""
-                    ),
-                    setter=set_timer_raw,
-                    dp_type=TuyaBLEDataPointType.DT_RAW,
-                ),
-            ],
-        },
-    ),
 }
 
 

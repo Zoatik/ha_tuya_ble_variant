@@ -84,16 +84,6 @@ mapping: dict[str, TuyaBLECategorySelectMapping] = {
                     ),
                 ),
             ],
-            "ldcdnigc": [   # ZX-7378 Smart Irrigation Controller
-                TuyaBLESelectMapping(
-                    dp_id=10,
-                    description=SelectEntityDescription(
-                        key="weather_delay",
-                        options=["cancel", "24h", "48h", "72h"],
-                        entity_category=EntityCategory.CONFIG,
-                    ),
-                ),
-            ],
         }
     ),
     "co2bj": TuyaBLECategorySelectMapping(

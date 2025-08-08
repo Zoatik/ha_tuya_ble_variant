@@ -92,6 +92,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                         key="low_battery",
                         name="Low Battery",
                         device_class=BinarySensorDeviceClass.BATTERY,
+                        entity_category=EntityCategory.DIAGNOSTIC,
                     ),
                     bit=0,
                 ),
@@ -102,6 +103,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                         key="fault",
                         name="Fault",
                         device_class=BinarySensorDeviceClass.PROBLEM,
+                        entity_category=EntityCategory.DIAGNOSTIC
                     ),
                     bit=1,
                 ),
@@ -112,6 +114,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                         key="lack_water",
                         name="Lack of Water",
                         icon="mdi:water-off",
+                        entity_category=EntityCategory.DIAGNOSTIC
                     ),
                     bit=2,
                 ),
@@ -122,6 +125,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                         key="sensor_fault",
                         name="Sensor Fault",
                         device_class=BinarySensorDeviceClass.PROBLEM,
+                        entity_category=EntityCategory.DIAGNOSTIC
                     ),
                     bit=3,
                 ),
@@ -132,6 +136,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                         key="motor_fault",
                         name="Motor Fault",
                         device_class=BinarySensorDeviceClass.PROBLEM,
+                        entity_category=EntityCategory.DIAGNOSTIC
                     ),
                     bit=4,
                 ),
@@ -142,6 +147,7 @@ mapping: dict[str, TuyaBLECategoryBinarySensorMapping] = {
                         key="low_temp",
                         name="Low Temperature",
                         device_class=BinarySensorDeviceClass.COLD,
+                        entity_category=EntityCategory.DIAGNOSTIC
                     ),
                     bit=5,
                 ),
